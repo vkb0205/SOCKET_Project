@@ -1,6 +1,0 @@
-﻿  Test Client.cpp
-D:\Test Client\Test Client.cpp(49,63): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
-D:\Test Client\Test Client.cpp(74,63): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
-D:\Test Client\Test Client.cpp(274,64): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
-D:\Test Client\Test Client.cpp(354,50): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
-  Test Client.vcxproj -> D:\Test Client\x64\Debug\Test Client.exe

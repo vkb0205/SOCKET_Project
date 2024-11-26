@@ -1,4 +1,0 @@
---------------------------------------------------
-Enter the files that you want to download: 
-NOTE: You have to enter the exact file names
---------------------------------------------------
