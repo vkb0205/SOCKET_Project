@@ -14,18 +14,16 @@
 #include <chrono>
 #include <regex>
 #include <algorithm>
-#include <sstream>
+#include <sstream> 
 #include <conio.h>
 
 #pragma comment(lib, "Ws2_32.lib")
-
-
 
 vector<int> progress(4, 0); // Initialize progress for 4 chunks
 
 using namespace std;
 
-void download_chunk(const string& server_ip, unsigned int port, const string& file_name, int chunk_index, int chunk_size, int offset) {
+void download_chunk(const string& server_ip, unsigned int port, const string& file_name, int chunk_index, int chunk_size) {
 	SOCKET ConnectSocket = INVALID_SOCKET;
 	ConnectSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (ConnectSocket == INVALID_SOCKET) {
@@ -45,7 +43,7 @@ void download_chunk(const string& server_ip, unsigned int port, const string& fi
 		return;
 	}
 
-	string message = "START " + file_name + " " + to_string(chunk_index) + " " + to_string(chunk_size) + " " + to_string(offset);
+	string message = "START DOWNLOADING " + file_name + " " + to_string(chunk_index) + " " + to_string(chunk_size);
 	iResult = send(ConnectSocket, message.c_str(), message.length(), 0);
 	if (iResult == SOCKET_ERROR) {
 		closesocket(ConnectSocket);
@@ -53,40 +51,6 @@ void download_chunk(const string& server_ip, unsigned int port, const string& fi
 		return;
 	}
 
-	// Send the file name and chunk information to the server
-	int name_length = file_name.length();
-	iResult = send(ConnectSocket, (char*)&name_length, sizeof(name_length), 0);
-	if (iResult == SOCKET_ERROR) {
-		_tprintf(_T("send failed: %d\n"), WSAGetLastError());
-		closesocket(ConnectSocket);
-		return;
-	}
-	iResult = send(ConnectSocket, file_name.c_str(), name_length, 0);
-	if (iResult == SOCKET_ERROR) {
-		_tprintf(_T("send failed: %d\n"), WSAGetLastError());
-		closesocket(ConnectSocket);
-		return;
-	}
-
-	// Send the chunk index, size, and offset
-	iResult = send(ConnectSocket, (char*)&chunk_index, sizeof(chunk_index), 0);
-	if (iResult == SOCKET_ERROR) {
-		_tprintf(_T("send failed: %d\n"), WSAGetLastError());
-		closesocket(ConnectSocket);
-		return;
-	}
-	iResult = send(ConnectSocket, (char*)&chunk_size, sizeof(chunk_size), 0);
-	if (iResult == SOCKET_ERROR) {
-		_tprintf(_T("send failed: %d\n"), WSAGetLastError());
-		closesocket(ConnectSocket);
-		return;
-	}
-	iResult = send(ConnectSocket, (char*)&offset, sizeof(offset), 0);
-	if (iResult == SOCKET_ERROR) {
-		_tprintf(_T("send failed: %d\n"), WSAGetLastError());
-		closesocket(ConnectSocket);
-		return;
-	}
 
 	// Receive the chunk data
 	ofstream down(file_name + ".part" + to_string(chunk_index), ios::binary);
