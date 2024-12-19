@@ -43,25 +43,6 @@ def reliable_send(server_socket, addr, data, seq_num):
             print(f"Socket error during reliable_send: {e}")
             break
 
-# def reliable_receive(server_socket):
-#     while True:
-#         try:
-#             server_socket.settimeout(TIMEOUT)
-#             packet, addr = server_socket.recvfrom(BUFFER_SIZE)
-#             valid, seq_num, ack_num, data, ack_flag = verify_packet(packet)
-#             if valid:
-#                 ack_packet = create_packet(seq_num, ack_num, b'', ack=True)
-#                 server_socket.sendto(ack_packet, addr)
-#                 return data, addr
-#         except socket.timeout:
-#             print("Timeout, waiting for packet")
-#             continue
-#         except BlockingIOError:
-#             continue
-#         except OSError as e:
-#             print(f"Socket error during reliable_receive: {e}")
-#             return None, None
-
 def reliable_receive(server_socket):
     expected_seq_num = 0
     received_data = b''
@@ -93,14 +74,14 @@ def reliable_receive(server_socket):
 # Convert size string to bytes
 def convert_to_bytes(size_str):
     size_str = size_str.upper()
-    if size_str.endswith('B'):
-        return int(size_str[:-1])
-    elif size_str.endswith('KB'):
+    if size_str.endswith('KB'):
         return int(size_str[:-2]) * 1024
     elif size_str.endswith('MB'):
         return int(size_str[:-2]) * 1024 * 1024
     elif size_str.endswith('GB'):
         return int(size_str[:-2]) * 1024 * 1024 * 1024
+    elif size_str.endswith('B'):
+        return int(size_str[:-1])
     else:
         raise ValueError(f"Unknown size format: {size_str}")
 
@@ -154,17 +135,12 @@ def download_chunk(host, port, file_name, chunk_id, start, end, progress, lock, 
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
         request = f"DOWNLOAD {file_name} {chunk_id} {start} {end}\n"
         reliable_send(s, (host, port), request.encode(), chunk_id)
-
+        
         with open(f"{file_name}.part{chunk_id}", 'wb') as f:
-            total_received = 0
-            while total_received < (end - start + 1):
-                data, _ = reliable_receive(s)
-                if data is None:
-                    break
-                f.write(data)
-                total_received += len(data)
-                with lock:
-                    progress[chunk_id] += len(data)
+            data, _ = reliable_receive(s)
+            f.write(data)
+            with lock:
+                progress[chunk_id] += len(data)
 
         # Mark this chunk as completed
         completion_flags[chunk_id] = True
@@ -176,6 +152,7 @@ def download_file(host, port, file_name, file_size):
     progress = [0] * 4
     completion_flags = [False] * 4
     lock = threading.Lock()
+    progress_percentages = [0] * 4
 
     with ThreadPoolExecutor(max_workers=4) as executor:
         futures = []
@@ -192,6 +169,13 @@ def download_file(host, port, file_name, file_size):
                 progress_str = f"Progress: {progress_percentages}%"
                 sys.stdout.write(f"\r{progress_str}")
                 sys.stdout.flush()
+                
+        for i in range(4):
+            if (progress_percentages[i] != 100):
+                progress_percentages[i] = 100
+        progress_str = f"Progress: {progress_percentages}%"
+        sys.stdout.write(f"\r{progress_str}")
+        sys.stdout.flush()
 
     with open(f"{file_name}", 'wb') as f:
         for i in range(4):
@@ -229,13 +213,6 @@ def main():
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
             print("Connected to the UDP server successfully.")
-            
-            # # Send LIST request to server
-            # reliable_send(s, (host, port), "LIST\n".encode(), 0)
-            # response, _ = reliable_receive(s)
-            # if response:
-            #     print("Available files on server:")
-            #     print(response.decode())
 
             try:
                 while True:

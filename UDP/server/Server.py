@@ -23,24 +23,6 @@ def verify_packet(packet):
     data = packet[10:]
     return checksum == sum(data) % 256, seq_num, ack_num, data, ack_flag
 
-# def reliable_send(server_socket, addr, data, seq_num):
-#     ack_num = 0
-#     packet = create_packet(seq_num, ack_num, data)
-#     while True:
-#         try:
-#             server_socket.sendto(packet, addr)
-#             server_socket.settimeout(TIMEOUT)
-#             ack, _ = server_socket.recvfrom(BUFFER_SIZE)
-#             valid, ack_seq_num, ack_num, _, ack_flag = verify_packet(ack)
-#             if valid and ack_flag == 1 and ack_seq_num == seq_num:
-#                 break
-#         except socket.timeout:
-#             print("Timeout, retransmitting packet")
-#             continue
-#         except OSError as e:
-#             print(f"Socket error during reliable_send: {e}")
-#             break
-
 def reliable_receive(server_socket):
     while True:
         try:
@@ -108,14 +90,6 @@ def handle_download_request(client_socket, request, addr):
     start, end = int(start), int(end)
     if(file_name in file_list):
         send_file_chunk(client_socket, addr, file_name, start, end, int(chunk_id))
-    # parts = request.split() # DOWNLOAD file_name chunk_id start end
-    # if len(parts) != 5:
-    #     return
-    # _, file_name, chunk_id, start, end = parts
-    # start, end = int(start), int(end)
-
-    # if file_name in file_list:
-    #     send_file_chunk(client_socket, addr, file_name, start, end, int(chunk_id))
 
 def send_file_chunk(client_socket, addr, file_name, start, end, chunk_id):
     try:
@@ -174,45 +148,6 @@ def main():
         print("Server shutting down.")
     finally:
         server_socket.close()
-        
-
-    # try:
-    #     while True:
-    #         try:
-    #             request, addr = server_socket.recvfrom(BUFFER_SIZE)
-    #             request = request.decode().strip()
-    #             if request == "LIST":
-    #                 send_file_list(server_socket, addr)
-    #             else:
-    #                 while True:
-    #                     try:
-    #                         request, addr = reliable_receive(server_socket)
-    #                         if request is None:
-    #                             break
-    #                         request = request.decode()
-    #                         if request.startswith("LIST"):
-    #                             send_file_list(server_socket, addr)
-    #                         elif request.startswith("DOWNLOAD"):
-    #                             handle_download_request(server_socket, request, addr)
-    #                         elif request.startswith("QUIT"):
-    #                             print(f"Client {addr} disconnected.")
-    #                             break
-    #                     except socket.timeout:
-    #                         print("Timeout, waiting for packet")
-    #                         continue
-    #                     except OSError as e:
-    #                         print(f"Socket error during reliable_receive: {e}")
-    #                         break
-    #         except socket.timeout:
-    #             print("Timeout, waiting for packet")
-    #             continue
-    #         except OSError as e:
-    #             print(f"Socket error: {e}")
-    #             break
-    # except KeyboardInterrupt:
-    #     print("Server shutting down.")
-    # finally:
-    #     server_socket.close()
 
 if __name__ == "__main__":
     main()
