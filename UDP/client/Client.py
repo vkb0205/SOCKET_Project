@@ -42,6 +42,8 @@ def reliable_send(server_socket, addr, data, seq_num):
         except OSError as e:
             print(f"Socket error during reliable_send: {e}")
             break
+        except KeyboardInterrupt:
+            break
 
 def reliable_receive(server_socket):
     expected_seq_num = 0
@@ -68,6 +70,8 @@ def reliable_receive(server_socket):
             continue
         except OSError as e:
             print(f"Socket error during reliable_receive: {e}")
+            return None, None
+        except KeyboardInterrupt:
             return None, None
     
 
@@ -129,6 +133,8 @@ def read_new_files(sock, host, port):
                     file_lists.append((file_name, size_bytes))
     except Exception as e:
         print(f"Failed to retrieve file list from server: {e}")
+    except KeyboardInterrupt:
+        return file_lists
     return file_lists
 
 def download_chunk(host, port, file_name, chunk_id, start, end, progress, lock, completion_flags):
@@ -212,9 +218,8 @@ def main():
     downloaded_files = set()
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
-            print("Connected to the UDP server successfully.")
-
             try:
+                print("Connected to the UDP server successfully.")
                 while True:
                     new_files = read_new_files(s, host, port)
                     files_to_download = get_files_to_download(downloaded_files, input_file)
@@ -226,15 +231,13 @@ def main():
                         f.write("Enter the files you want to download:\n")
                         for file in files_to_download:
                             f.write(f"{file}\n")
-
                     for file_info, file_size in files_to_download:
                         print(f"Downloading {file_info}\n")
                         download_file(host, port, file_info, file_size)
                         downloaded_files.add(file_info)
                     time.sleep(5)
-            except KeyboardInterrupt:
-                reliable_send(s, (host, port), "QUIT\n".encode(), 0)
-                print("\nClient stopped.")
+            except KeyboardInterrupt:   
+                print("Exiting...")
     except Exception as e:
         print(f"Failed to connect to the server: {e}")
 

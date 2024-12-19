@@ -4,7 +4,7 @@ import threading
 import struct
 
 BUFFER_SIZE = 1024
-TIMEOUT = 10  # Seconds
+TIMEOUT = 30  # Seconds
 PORT = 9000
 
 file_list = {}
@@ -42,7 +42,7 @@ def reliable_receive(server_socket):
             print(f"Socket error during reliable_receive: {e}")
             return None, None
         
-WINDOW_SIZE = 5
+WINDOW_SIZE = 20
 
 def reliable_send(server_socket, addr, data, base_seq_num):
     next_seq_num = base_seq_num
@@ -63,6 +63,7 @@ def reliable_send(server_socket, addr, data, base_seq_num):
         try:
             server_socket.settimeout(TIMEOUT)
             ack, _ = server_socket.recvfrom(BUFFER_SIZE)
+            
             valid, ack_seq_num, _, _, ack_flag = verify_packet(ack)
             if valid and ack_flag == 1:
                 acked.add(ack_seq_num)
@@ -76,7 +77,7 @@ def reliable_send(server_socket, addr, data, base_seq_num):
         except OSError as e:
             print(f"Socket error during reliable_send: {e}")
             break 
-
+            
 def send_file_list(client_socket, addr):
     with file_lock:
         response = "\n".join([f"{file} {size}" for file, size in file_list.items()])
@@ -89,7 +90,9 @@ def handle_download_request(client_socket, request, addr):
     _, file_name, chunk_id, start, end = parts
     start, end = int(start), int(end)
     if(file_name in file_list):
-        send_file_chunk(client_socket, addr, file_name, start, end, int(chunk_id))
+        # Create a new socket for this download session
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as download_socket:
+            send_file_chunk(download_socket, addr, file_name, start, end, int(chunk_id))
 
 def send_file_chunk(client_socket, addr, file_name, start, end, chunk_id):
     try:
@@ -118,25 +121,26 @@ def main():
     try:
         while True:
             try:
-                request, addr = server_socket.recvfrom(BUFFER_SIZE)
-                valid, seq_num, ack_num, data, ack_flag = verify_packet(request)
-                reliable_send(server_socket, addr, b"", 0)
+                # request, addr = server_socket.recvfrom(BUFFER_SIZE)
+                # valid, seq_num, ack_num, data, ack_flag = verify_packet(request)
+                # reliable_send(server_socket, addr, b"", 0)
+                data, addr = reliable_receive(server_socket)
                 data = data.decode().strip()
                 print(f"Request: {data}")
                 if data == "LIST":
                     load_file_list()
                     send_file_list(server_socket, addr)
+                elif data.startswith("QUIT"):
+                    print(f"Client {addr} disconnected.")
+                    break                    
                 else:
                     while True:
                         try:
                             request, addr = reliable_receive(server_socket)
-                            if request is None:
-                                break
                             request = request.decode()
                             if request.startswith("DOWNLOAD"):
                                 handle_download_request(server_socket, request, addr)
-                            elif request.startswith("QUIT"):
-                                print(f"Client {addr} disconnected.")
+                            else:
                                 break
                         except OSError as e:
                             print(f"Socket error during reliable_receive: {e}")
