@@ -1,7 +1,0 @@
-﻿  Test SOCKET.cpp
-D:\Test SOCKET\Test SOCKET.cpp(31,76): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
-D:\Test SOCKET\Test SOCKET.cpp(58,62): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
-D:\Test SOCKET\Test SOCKET.cpp(67,87): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
-D:\Test SOCKET\Test SOCKET.cpp(90,56): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
-D:\Test SOCKET\Test SOCKET.cpp(99,19): warning C4244: 'initializing': conversion from 'std::streamsize' to 'int', possible loss of data
-  Test SOCKET.vcxproj -> D:\Test SOCKET\x64\Debug\Test SOCKET.exe
