@@ -1,9 +1,0 @@
-file.txt 4200
-test.txt 104857600
-file1.txt 4224
-image.png 5671608
-big_buck_bunny_720p_1mb.mp4 1055736
-anime_girl_4k_hd-3840x2160.jpg 915456
----------------------------------------
-Enter the files you want to download:
-('test.txt', 104857600)

@@ -1,6 +1,0 @@
-file.txt 4200B
-test.txt 104857600B
-file1.txt 4224B
-image.png 5671608B
-big_buck_bunny_720p_1mb.mp4 1055736B
-anime_girl_4k_hd-3840x2160.jpg 894KB

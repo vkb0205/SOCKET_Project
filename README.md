@@ -1,1 +1,0 @@
-The project of Computer Networks - HCMUS
